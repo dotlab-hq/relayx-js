@@ -8,14 +8,16 @@ export interface RelayXOptions {
 
 export interface SendSMSParams {
     /** Phone number including country code (e.g. "+14155552671") */
-    number: string;
+    phoneNumber : string;
     /** The SMS message body */
     message: string;
 }
 
 export interface SendSMSResponse {
     success: boolean;
-    message?: string;
+    message: string;
+    status?:string; // could be "pending", "sent", "failed", "rejected".
+    eventId?: string;
     [key: string]: unknown;
 }
 
@@ -49,16 +51,16 @@ export class RelayX {
     /**
      * Send an SMS message.
      *
-     * @param params  `number` (with country code) and `message`.
+     * @param params  `phoneNumber` (with country code) and `message`.
      * @returns       The API response.
      * @throws        On network errors or non-2xx HTTP responses.
      */
     async sendSMS( params: SendSMSParams ): Promise<SendSMSResponse> {
-        const { number, message } = params;
+        const { phoneNumber, message } = params;
 
-        if ( !number || typeof number !== "string" ) {
+        if ( !phoneNumber || typeof phoneNumber !== "string" ) {
             throw new TypeError(
-                "RelayX: `number` must be a non-empty string with a country code.",
+                "RelayX: `phoneNumber` must be a non-empty string with a country code.",
             );
         }
 
@@ -70,9 +72,9 @@ export class RelayX {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${this.apiKey}`,
+                "x-api-key": this.apiKey
             },
-            body: JSON.stringify( { number, message } ),
+            body: JSON.stringify( { phoneNumber, message } ),
         } );
 
         if ( !response.ok ) {
